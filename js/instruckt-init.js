@@ -1,19 +1,18 @@
 /**
- * Tauri IPC shim for instruckt.
+ * Tauri IPC shim + auto-initialization for instruckt.
  *
  * This script is injected into every webview via `js_init_script`.
- * It provides a global `__instrucktTauriShim` that routes instruckt's
- * API calls through Tauri's IPC instead of HTTP fetch.
+ * It does three things:
+ * 1. Monkey-patches fetch() to intercept instruckt API calls → Tauri IPC
+ * 2. Waits for the DOM to be ready
+ * 3. Initializes instruckt with the Tauri-appropriate config
  *
- * It also monkey-patches `fetch()` so that any requests to `/instruckt/*`
- * endpoints are intercepted and routed through Tauri IPC — this way the
- * instruckt JS core works without modification.
+ * The instruckt IIFE bundle is injected separately (before this script)
+ * and exposes the global `Instruckt` object.
  */
 (function () {
   "use strict";
 
-  // Only activate in dev builds — this script is only injected when
-  // cfg!(debug_assertions) is true, but double-check just in case.
   if (!window.__TAURI__) {
     console.warn("[instruckt] Tauri API not found, shim not activated");
     return;
@@ -21,24 +20,9 @@
 
   const invoke = window.__TAURI__.core.invoke;
 
-  // Expose the shim globally for direct use
-  window.__instrucktTauriShim = {
-    async getAnnotations() {
-      return await invoke("plugin:instruckt|get_annotations");
-    },
-    async createAnnotation(data) {
-      return await invoke("plugin:instruckt|create_annotation", { data });
-    },
-    async updateAnnotation(id, data) {
-      return await invoke("plugin:instruckt|update_annotation", { id, data });
-    },
-  };
+  // --- Fetch Shim ---
+  // Intercept instruckt's HTTP API calls and route through Tauri IPC.
 
-  // Monkey-patch fetch to intercept instruckt API calls.
-  // The instruckt JS core uses fetch() to call HTTP endpoints like:
-  //   GET  /instruckt/annotations
-  //   POST /instruckt/annotations
-  //   PATCH /instruckt/annotations/{id}
   const originalFetch = window.fetch;
   window.fetch = async function (input, init) {
     const url =
@@ -52,7 +36,6 @@
 
     if (!url) return originalFetch.call(this, input, init);
 
-    // Match instruckt API routes
     const method = (init?.method || "GET").toUpperCase();
 
     // GET /instruckt/annotations
@@ -66,7 +49,10 @@
 
     // POST /instruckt/annotations
     if (url.match(/\/instruckt\/annotations\/?$/) && method === "POST") {
-      const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : (init?.body || {});
+      const body =
+        init?.body && typeof init.body === "string"
+          ? JSON.parse(init.body)
+          : init?.body || {};
       const data = await invoke("plugin:instruckt|create_annotation", {
         data: body,
       });
@@ -80,7 +66,10 @@
     const patchMatch = url.match(/\/instruckt\/annotations\/([^/?]+)/);
     if (patchMatch && method === "PATCH") {
       const id = patchMatch[1];
-      const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : (init?.body || {});
+      const body =
+        init?.body && typeof init.body === "string"
+          ? JSON.parse(init.body)
+          : init?.body || {};
       const data = await invoke("plugin:instruckt|update_annotation", {
         id,
         data: body,
@@ -91,9 +80,30 @@
       });
     }
 
-    // Not an instruckt route — pass through to real fetch
     return originalFetch.call(this, input, init);
   };
 
-  console.log("[instruckt] Tauri IPC shim activated");
+  // --- Auto-initialize instruckt ---
+
+  function initInstruckt() {
+    if (typeof Instruckt === "undefined" || !Instruckt.init) {
+      console.warn("[instruckt] Instruckt global not found, retrying...");
+      setTimeout(initInstruckt, 100);
+      return;
+    }
+
+    Instruckt.init({
+      endpoint: "/instruckt",
+      theme: "auto",
+      position: "bottom-right",
+    });
+
+    console.log("[instruckt] Initialized via Tauri plugin");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initInstruckt);
+  } else {
+    initInstruckt();
+  }
 })();

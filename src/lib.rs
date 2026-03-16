@@ -13,12 +13,20 @@ use tauri::{Manager, Runtime};
 use state::InstrucktState;
 use store::Store;
 
-/// The JS shim that intercepts instruckt's fetch calls and routes them
-/// through Tauri IPC. Only injected in debug builds.
+/// The vendored instruckt JS library (IIFE bundle).
+/// Exposes the `Instruckt` global with `Instruckt.init()`.
+#[cfg(debug_assertions)]
+const INSTRUCKT_IIFE_JS: &str = include_str!("../js/instruckt.iife.js");
+
+/// The Tauri IPC shim + auto-initialization script.
+/// Patches fetch() and calls `Instruckt.init()` on DOMContentLoaded.
 #[cfg(debug_assertions)]
 const INSTRUCKT_INIT_JS: &str = include_str!("../js/instruckt-init.js");
 
 /// Initialize the instruckt plugin.
+///
+/// In debug builds, this injects the instruckt annotation UI and IPC shim
+/// into every webview automatically. In release builds, nothing is injected.
 ///
 /// # Usage
 ///
@@ -50,10 +58,14 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             Ok(())
         });
 
-    // Only inject the JS shim in debug builds
+    // In debug builds, inject the instruckt UI library + Tauri IPC shim.
+    // The IIFE bundle must come first (defines the Instruckt global),
+    // then the init script (patches fetch and calls Instruckt.init()).
     #[cfg(debug_assertions)]
     {
-        builder = builder.js_init_script(INSTRUCKT_INIT_JS.to_string());
+        builder = builder
+            .js_init_script(INSTRUCKT_IIFE_JS.to_string())
+            .js_init_script(INSTRUCKT_INIT_JS.to_string());
     }
 
     builder.build()
