@@ -32,7 +32,16 @@ impl InstrucktMcpServer {
 impl ServerHandler for InstrucktMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
-            .with_instructions("instruckt annotation server — manages UI feedback annotations for AI coding agents")
+            .with_instructions(concat!(
+                "instruckt — UI annotation server for AI coding agents.\n\n",
+                "When the user pastes UI feedback annotations, follow this workflow:\n",
+                "1. Call `get_all_pending` to get all annotations with full metadata\n",
+                "2. For each annotation, call `get_source_location` to get the exact source file and line number\n",
+                "3. If an annotation has a screenshot, call `get_screenshot` to view it\n",
+                "4. Use `get_component_stack` to understand the component hierarchy when needed\n",
+                "5. After fixing each issue, call `resolve` to mark it done\n\n",
+                "The source location data includes React/Vue/Svelte component names, file paths, and line numbers.",
+            ))
     }
 }
 
