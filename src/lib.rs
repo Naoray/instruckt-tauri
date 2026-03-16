@@ -58,14 +58,14 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             Ok(())
         });
 
-    // In debug builds, inject the instruckt UI library + Tauri IPC shim.
-    // The IIFE bundle must come first (defines the Instruckt global),
-    // then the init script (patches fetch and calls Instruckt.init()).
+    // In debug builds, inject the instruckt UI library + IPC shim as a
+    // single script. Multiple js_init_script calls have no guaranteed
+    // execution order on WebKit, so we concatenate them to ensure the
+    // IIFE (defining the Instruckt global) runs before the init shim.
     #[cfg(debug_assertions)]
     {
-        builder = builder
-            .js_init_script(INSTRUCKT_IIFE_JS.to_string())
-            .js_init_script(INSTRUCKT_INIT_JS.to_string());
+        let combined = format!("{}\n{}", INSTRUCKT_IIFE_JS, INSTRUCKT_INIT_JS);
+        builder = builder.js_init_script(combined);
     }
 
     builder.build()
