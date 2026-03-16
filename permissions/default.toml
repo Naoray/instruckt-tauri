@@ -1,0 +1,7 @@
+[default]
+description = "Default permissions for the instruckt plugin"
+permissions = [
+    "allow-get-annotations",
+    "allow-create-annotation",
+    "allow-update-annotation",
+]
