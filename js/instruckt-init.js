@@ -99,6 +99,8 @@
       endpoint: "/instruckt",
       theme: "auto",
       position: "bottom-right",
+      adapters: ["react"],
+      mcp: true,
     });
 
     console.log("[instruckt] Initialized via Tauri plugin");
