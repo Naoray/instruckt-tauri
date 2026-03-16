@@ -50,17 +50,19 @@ This installs `instruckt-mcp` to `~/.cargo/bin/`.
 
 ### 5. Configure Claude Code
 
-Add to your project's `.claude/settings.json`:
+Add to your project's `.mcp.json` (at the project root):
 
 ```json
 {
   "mcpServers": {
     "instruckt": {
-      "command": "instruckt-mcp"
+      "command": "/path/to/.cargo/bin/instruckt-mcp"
     }
   }
 }
 ```
+
+Replace `/path/to/.cargo/bin/instruckt-mcp` with the output of `which instruckt-mcp`.
 
 ## Usage
 
