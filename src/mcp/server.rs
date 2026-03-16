@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::*;
-use rmcp::{tool, tool_router, ErrorData as McpError, ServerHandler};
+use rmcp::{tool, tool_handler, tool_router, ErrorData as McpError, ServerHandler};
 use serde_json::json;
 use tokio::sync::Mutex;
 
@@ -28,6 +28,7 @@ impl InstrucktMcpServer {
     }
 }
 
+#[tool_handler]
 impl ServerHandler for InstrucktMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
