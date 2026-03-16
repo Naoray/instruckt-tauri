@@ -13,12 +13,15 @@
 (function () {
   "use strict";
 
-  if (!window.__TAURI__) {
-    console.warn("[instruckt] Tauri API not found, shim not activated");
+  // Use __TAURI_INTERNALS__ directly — always available in init scripts,
+  // regardless of withGlobalTauri setting. The public window.__TAURI__ API
+  // isn't ready yet when init scripts run (before DOM parsing).
+  if (!window.__TAURI_INTERNALS__) {
+    console.warn("[instruckt] Tauri internals not found, shim not activated");
     return;
   }
 
-  const invoke = window.__TAURI__.core.invoke;
+  const invoke = window.__TAURI_INTERNALS__.invoke;
 
   // --- Fetch Shim ---
   // Intercept instruckt's HTTP API calls and route through Tauri IPC.
