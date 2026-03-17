@@ -46,6 +46,32 @@ Denies the create_annotation command without any pre-configured scope.
 <tr>
 <td>
 
+`instruckt:allow-delete-annotation`
+
+</td>
+<td>
+
+Enables the delete_annotation command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`instruckt:deny-delete-annotation`
+
+</td>
+<td>
+
+Denies the delete_annotation command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `instruckt:allow-get-annotations`
 
 </td>

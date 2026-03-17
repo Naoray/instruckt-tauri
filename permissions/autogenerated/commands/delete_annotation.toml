@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-delete-annotation"
+description = "Enables the delete_annotation command without any pre-configured scope."
+commands.allow = ["delete_annotation"]
+
+[[permission]]
+identifier = "deny-delete-annotation"
+description = "Denies the delete_annotation command without any pre-configured scope."
+commands.deny = ["delete_annotation"]

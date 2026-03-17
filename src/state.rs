@@ -1,4 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 
 use crate::error::Result;
 use crate::store::Store;
@@ -17,18 +19,23 @@ impl InstrucktState {
         }
     }
 
-    pub fn read_all(&self) -> Result<Vec<Annotation>> {
-        let store = self.store.lock()?;
+    pub async fn read_all(&self) -> Result<Vec<Annotation>> {
+        let store = self.store.lock().await;
         store.read_all()
     }
 
-    pub fn create_annotation(&self, input: CreateAnnotation) -> Result<Annotation> {
-        let store = self.store.lock()?;
+    pub async fn create_annotation(&self, input: CreateAnnotation) -> Result<Annotation> {
+        let store = self.store.lock().await;
         store.create_annotation(input)
     }
 
-    pub fn update_annotation(&self, id: &str, input: UpdateAnnotation) -> Result<Annotation> {
-        let store = self.store.lock()?;
+    pub async fn update_annotation(&self, id: &str, input: UpdateAnnotation) -> Result<Annotation> {
+        let store = self.store.lock().await;
         store.update_annotation(id, input)
+    }
+
+    pub async fn delete_annotation(&self, id: &str) -> Result<()> {
+        let store = self.store.lock().await;
+        store.delete_annotation(id)
     }
 }

@@ -65,10 +65,12 @@
       });
     }
 
+    // Match annotation ID routes for PATCH and DELETE
+    const idMatch = url.match(/\/instruckt\/annotations\/([^/?]+)/);
+
     // PATCH /instruckt/annotations/{id}
-    const patchMatch = url.match(/\/instruckt\/annotations\/([^/?]+)/);
-    if (patchMatch && method === "PATCH") {
-      const id = patchMatch[1];
+    if (idMatch && method === "PATCH") {
+      const id = idMatch[1];
       const body =
         init?.body && typeof init.body === "string"
           ? JSON.parse(init.body)
@@ -83,10 +85,26 @@
       });
     }
 
+    // DELETE /instruckt/annotations/{id}
+    if (idMatch && method === "DELETE") {
+      const id = idMatch[1];
+      await invoke("plugin:instruckt|delete_annotation", { id });
+      return new Response(null, { status: 204 });
+    }
+
     return originalFetch.call(this, input, init);
   };
 
   // --- Auto-initialize instruckt ---
+
+  // Detect frontend frameworks by checking for known globals and DOM markers
+  function detectAdapters() {
+    const adapters = [];
+    if (typeof React !== "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined") adapters.push("react");
+    if (typeof Vue !== "undefined" || document.querySelector("[data-v-app]")) adapters.push("vue");
+    if (typeof __SVELTE_HMR !== "undefined" || document.querySelector("[class*='svelte-']")) adapters.push("svelte");
+    return adapters;
+  }
 
   let retryCount = 0;
   const MAX_RETRIES = 50;
@@ -107,7 +125,7 @@
       endpoint: "/instruckt",
       theme: "auto",
       position: "bottom-right",
-      adapters: ["react"],
+      adapters: detectAdapters(),
       mcp: true,
     });
 
