@@ -69,8 +69,8 @@ impl InstrucktMcpServer {
 
             let annotations: Vec<serde_json::Value> = pending
                 .iter()
-                .map(|a| {
-                    let mut val = serde_json::to_value(a).unwrap_or_default();
+                .map(|annotation| {
+                    let mut val = serde_json::to_value(annotation).unwrap_or_default();
                     if let Some(obj) = val.as_object_mut() {
                         let has_screenshot = obj
                             .remove("screenshot")
@@ -82,13 +82,13 @@ impl InstrucktMcpServer {
                 })
                 .collect();
 
-            let result = json!({
+            let response = json!({
                 "count": annotations.len(),
                 "annotations": annotations,
             });
 
             Ok(CallToolResult::success(vec![Content::text(
-                serde_json::to_string_pretty(&result)
+                serde_json::to_string_pretty(&response)
                     .map_err(|e| McpError::internal_error(e.to_string(), None))?,
             )]))
         })
@@ -129,7 +129,7 @@ impl InstrucktMcpServer {
         tokio::task::spawn_blocking(move || {
             let store = store.lock().map_err(poison_err)?;
             let now = chrono::Utc::now().to_rfc3339();
-            let data = crate::types::UpdateAnnotation {
+            let update = crate::types::UpdateAnnotation {
                 comment: None,
                 status: Some(crate::types::AnnotationStatus::Resolved),
                 resolved_by: Some(crate::types::RESOLVED_BY_AGENT.to_string()),
@@ -138,10 +138,10 @@ impl InstrucktMcpServer {
             };
 
             let annotation = store
-                .update_annotation(&params.annotation_id, data)
+                .update_annotation(&params.annotation_id, update)
                 .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
-            let result = json!({
+            let response = json!({
                 "id": annotation.id,
                 "status": annotation.status,
                 "resolved_by": annotation.resolved_by,
@@ -149,7 +149,7 @@ impl InstrucktMcpServer {
             });
 
             Ok(CallToolResult::success(vec![Content::text(
-                serde_json::to_string_pretty(&result)
+                serde_json::to_string_pretty(&response)
                     .map_err(|e| McpError::internal_error(e.to_string(), None))?,
             )]))
         })
@@ -179,12 +179,12 @@ impl InstrucktMcpServer {
             let mut source_file = None;
             let mut source_line = None;
 
-            if let Some(ref fw) = annotation.framework {
-                source_file = fw.get("source_file").and_then(|v| v.as_str()).map(String::from);
-                source_line = fw.get("source_line").and_then(|v| v.as_u64());
+            if let Some(ref framework) = annotation.framework {
+                source_file = framework.get("source_file").and_then(|v| v.as_str()).map(String::from);
+                source_line = framework.get("source_line").and_then(|v| v.as_u64());
             }
 
-            let result = json!({
+            let response = json!({
                 "annotation_id": annotation.id,
                 "element": annotation.element,
                 "element_path": annotation.element_path,
@@ -194,7 +194,7 @@ impl InstrucktMcpServer {
             });
 
             Ok(CallToolResult::success(vec![Content::text(
-                serde_json::to_string_pretty(&result)
+                serde_json::to_string_pretty(&response)
                     .map_err(|e| McpError::internal_error(e.to_string(), None))?,
             )]))
         })
@@ -224,16 +224,16 @@ impl InstrucktMcpServer {
             let component_stack = annotation
                 .framework
                 .as_ref()
-                .and_then(|fw| fw.get("component_stack"));
+                .and_then(|framework| framework.get("component_stack"));
 
-            let result = json!({
+            let response = json!({
                 "annotation_id": annotation.id,
                 "element_path": annotation.element_path,
                 "component_stack": component_stack,
             });
 
             Ok(CallToolResult::success(vec![Content::text(
-                serde_json::to_string_pretty(&result)
+                serde_json::to_string_pretty(&response)
                     .map_err(|e| McpError::internal_error(e.to_string(), None))?,
             )]))
         })
@@ -267,14 +267,14 @@ impl InstrucktMcpServer {
 
         let files = crate::project::get_project_structure(root_path);
 
-        let result = json!({
+        let response = json!({
             "root": root,
             "file_count": files.len(),
             "files": files,
         });
 
         Ok(CallToolResult::success(vec![Content::text(
-            serde_json::to_string_pretty(&result)
+            serde_json::to_string_pretty(&response)
                 .map_err(|e| McpError::internal_error(e.to_string(), None))?,
         )]))
     }
