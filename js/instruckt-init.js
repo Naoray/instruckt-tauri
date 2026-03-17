@@ -104,6 +104,50 @@
     });
 
     console.log("[instruckt] Initialized via Tauri plugin");
+
+    // --- Inject visible drag handle into toolbar ---
+    // The IIFE toolbar supports drag but has no visual affordance.
+    // We inject a grip handle at the top so users know it's draggable.
+    requestAnimationFrame(() => {
+      const host = document.querySelector('[data-instruckt="toolbar"]');
+      if (!host || !host.shadowRoot) return;
+
+      const toolbar = host.shadowRoot.querySelector(".toolbar");
+      if (!toolbar) return;
+
+      // Add drag handle CSS
+      const style = document.createElement("style");
+      style.textContent = `
+        .drag-handle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 10px;
+          cursor: grab;
+          opacity: 0.35;
+          transition: opacity 0.15s ease;
+          flex-shrink: 0;
+          margin-bottom: 2px;
+        }
+        .drag-handle:hover { opacity: 0.7; }
+        .drag-handle:active { cursor: grabbing; opacity: 0.9; }
+        .drag-handle svg { pointer-events: none; }
+      `;
+      host.shadowRoot.appendChild(style);
+
+      // Create grip dots SVG (6-dot pattern)
+      const handle = document.createElement("div");
+      handle.className = "drag-handle";
+      handle.setAttribute("aria-label", "Drag to reposition toolbar");
+      handle.innerHTML = `<svg width="16" height="6" viewBox="0 0 16 6" fill="currentColor">
+        <circle cx="4" cy="1.5" r="1.2"/><circle cx="8" cy="1.5" r="1.2"/><circle cx="12" cy="1.5" r="1.2"/>
+        <circle cx="4" cy="4.5" r="1.2"/><circle cx="8" cy="4.5" r="1.2"/><circle cx="12" cy="4.5" r="1.2"/>
+      </svg>`;
+
+      // Insert at the top of the toolbar
+      toolbar.prepend(handle);
+    });
   }
 
   if (document.readyState === "loading") {
