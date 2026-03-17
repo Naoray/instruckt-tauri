@@ -14,6 +14,9 @@ pub enum Error {
     #[error("Annotation not found: {0}")]
     NotFound(String),
 
+    #[error("Mutex poisoned: {0}")]
+    MutexPoisoned(String),
+
     #[error("{0}")]
     Other(String),
 }
