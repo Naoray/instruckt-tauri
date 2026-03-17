@@ -235,8 +235,8 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64::Engine;
     use crate::types::{AnnotationStatus, CreateAnnotation, ThreadMessage, UpdateAnnotation};
+    use base64::Engine;
     use tempfile::TempDir;
 
     fn make_store() -> (TempDir, Store) {

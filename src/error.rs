@@ -1,5 +1,6 @@
 use serde::Serialize;
 
+/// Errors that can occur during instruckt operations.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("IO: {0}")]
@@ -17,12 +18,18 @@ pub enum Error {
     #[error("Mutex poisoned: {0}")]
     MutexPoisoned(String),
 
+    #[error("Validation error: {0}")]
+    Validation(String),
+
     #[error("{0}")]
     Other(String),
 }
 
 impl Serialize for Error {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
     }
 }
@@ -39,4 +46,5 @@ impl From<tokio::task::JoinError> for Error {
     }
 }
 
+/// Convenience result type for instruckt operations.
 pub type Result<T> = std::result::Result<T, Error>;
