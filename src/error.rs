@@ -27,4 +27,16 @@ impl Serialize for Error {
     }
 }
 
+impl<T> From<std::sync::PoisonError<T>> for Error {
+    fn from(e: std::sync::PoisonError<T>) -> Self {
+        Error::MutexPoisoned(e.to_string())
+    }
+}
+
+impl From<tokio::task::JoinError> for Error {
+    fn from(e: tokio::task::JoinError) -> Self {
+        Error::Other(e.to_string())
+    }
+}
+
 pub type Result<T> = std::result::Result<T, Error>;

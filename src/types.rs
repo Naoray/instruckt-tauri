@@ -105,7 +105,7 @@ pub struct CreateAnnotation {
 }
 
 /// Subset of fields that can be updated after creation.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct UpdateAnnotation {
     #[serde(default)]
     pub comment: Option<String>,

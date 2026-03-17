@@ -88,8 +88,16 @@
 
   // --- Auto-initialize instruckt ---
 
+  let retryCount = 0;
+  const MAX_RETRIES = 50;
+
   function initInstruckt() {
     if (typeof Instruckt === "undefined" || !Instruckt.init) {
+      if (retryCount >= MAX_RETRIES) {
+        console.warn("[instruckt] Failed to initialize after maximum retries");
+        return;
+      }
+      retryCount++;
       console.warn("[instruckt] Instruckt global not found, retrying...");
       setTimeout(initInstruckt, 100);
       return;
