@@ -23,7 +23,9 @@ pub fn save_screenshot(screenshots_dir: &Path, id: &str, data_url: &str) -> Resu
 pub fn delete_screenshot(data_dir: &Path, relative_path: Option<&str>) {
     if let Some(rel) = relative_path {
         let path = data_dir.join(rel);
-        let _ = std::fs::remove_file(path);
+        if let Err(e) = std::fs::remove_file(&path) {
+            log::warn!("Failed to delete screenshot {}: {e}", path.display());
+        }
     }
 }
 
