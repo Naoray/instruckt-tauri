@@ -30,6 +30,7 @@ pub fn delete_screenshot(data_dir: &Path, relative_path: Option<&str>) {
 }
 
 /// Screenshot data with separate base64 payload and MIME type.
+#[derive(Debug)]
 pub struct ScreenshotData {
     pub base64: String,
     pub mime_type: String,
@@ -60,7 +61,7 @@ fn parse_data_url(data_url: &str) -> Result<(String, &str)> {
         .ok_or_else(|| Error::Other("Invalid data URL: missing 'data:' prefix".into()))?;
 
     let (header, data) = rest
-        .split_once(",")
+        .split_once(',')
         .ok_or_else(|| Error::Other("Invalid data URL: missing comma separator".into()))?;
 
     let mime = header

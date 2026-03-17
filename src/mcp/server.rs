@@ -12,11 +12,9 @@ use super::tools::{AnnotationIdParam, GetProjectStructureParams};
 
 /// MCP server that exposes instruckt annotation tools over stdio.
 #[derive(Clone)]
-// Fields are read by macro-generated code from `#[tool_router]` / `ServerHandler`,
-// so rustc's dead-code analysis cannot see the usage.
-#[allow(dead_code)]
 pub struct InstrucktMcpServer {
     store: Arc<Mutex<Store>>,
+    #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
 }
 
