@@ -43,8 +43,8 @@
 
     // GET /instruckt/annotations
     if (url.match(/\/instruckt\/annotations\/?$/) && method === "GET") {
-      const data = await invoke("plugin:instruckt|get_annotations");
-      return new Response(JSON.stringify(data), {
+      const annotations = await invoke("plugin:instruckt|get_annotations");
+      return new Response(JSON.stringify(annotations), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -56,10 +56,10 @@
         init?.body && typeof init.body === "string"
           ? JSON.parse(init.body)
           : init?.body || {};
-      const data = await invoke("plugin:instruckt|create_annotation", {
-        data: body,
+      const created = await invoke("plugin:instruckt|create_annotation", {
+        input: body,
       });
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(created), {
         status: 201,
         headers: { "Content-Type": "application/json" },
       });
@@ -73,11 +73,11 @@
         init?.body && typeof init.body === "string"
           ? JSON.parse(init.body)
           : init?.body || {};
-      const data = await invoke("plugin:instruckt|update_annotation", {
+      const updated = await invoke("plugin:instruckt|update_annotation", {
         id,
-        data: body,
+        input: body,
       });
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(updated), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });

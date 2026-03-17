@@ -21,8 +21,8 @@ pub fn save_screenshot(screenshots_dir: &Path, id: &str, data_url: &str) -> Resu
 
 /// Delete a screenshot file given its relative path (e.g. "screenshots/abc.png").
 pub fn delete_screenshot(data_dir: &Path, relative_path: Option<&str>) {
-    if let Some(rel) = relative_path {
-        let path = data_dir.join(rel);
+    if let Some(relative) = relative_path {
+        let path = data_dir.join(relative);
         if let Err(e) = std::fs::remove_file(&path) {
             log::warn!("Failed to delete screenshot {}: {e}", path.display());
         }

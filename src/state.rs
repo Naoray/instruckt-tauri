@@ -21,13 +21,13 @@ impl InstrucktState {
         store.read_all()
     }
 
-    pub fn create_annotation(&self, data: CreateAnnotation) -> Result<Annotation> {
+    pub fn create_annotation(&self, input: CreateAnnotation) -> Result<Annotation> {
         let store = self.store.lock()?;
-        store.create_annotation(data)
+        store.create_annotation(input)
     }
 
-    pub fn update_annotation(&self, id: &str, data: UpdateAnnotation) -> Result<Annotation> {
+    pub fn update_annotation(&self, id: &str, input: UpdateAnnotation) -> Result<Annotation> {
         let store = self.store.lock()?;
-        store.update_annotation(id, data)
+        store.update_annotation(id, input)
     }
 }

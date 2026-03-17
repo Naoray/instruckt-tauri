@@ -32,7 +32,7 @@ impl Store {
     /// or equivalent on other platforms via `dirs::data_dir()`.
     pub fn default_data_dir() -> Result<PathBuf> {
         dirs::data_dir()
-            .map(|d| d.join("instruckt"))
+            .map(|dir| dir.join("instruckt"))
             .ok_or_else(|| Error::Other("Could not determine OS data directory".into()))
     }
 
@@ -118,14 +118,14 @@ impl Store {
     }
 
     /// Create a new annotation with a generated ULID and timestamp.
-    pub fn create_annotation(&self, data: CreateAnnotation) -> Result<Annotation> {
+    pub fn create_annotation(&self, input: CreateAnnotation) -> Result<Annotation> {
         let _lock = self.lock_exclusive()?;
         let mut annotations = self.read_all_locked()?;
         let now = chrono::Utc::now().to_rfc3339();
         let id = ulid::Ulid::new().to_string().to_lowercase();
 
         // Save screenshot if provided as data URL
-        let screenshot_path = match &data.screenshot {
+        let screenshot_path = match &input.screenshot {
             Some(data_url) if data_url.starts_with("data:") => {
                 Some(screenshot::save_screenshot(&self.screenshots_dir(), &id, data_url)?)
             }
@@ -134,21 +134,21 @@ impl Store {
 
         let annotation = Annotation {
             id,
-            url: data.url,
-            x: data.x,
-            y: data.y,
-            comment: data.comment,
-            element: data.element,
-            element_path: data.element_path,
-            css_classes: data.css_classes,
-            nearby_text: data.nearby_text,
-            selected_text: data.selected_text,
-            bounding_box: data.bounding_box,
+            url: input.url,
+            x: input.x,
+            y: input.y,
+            comment: input.comment,
+            element: input.element,
+            element_path: input.element_path,
+            css_classes: input.css_classes,
+            nearby_text: input.nearby_text,
+            selected_text: input.selected_text,
+            bounding_box: input.bounding_box,
             screenshot: screenshot_path,
-            intent: data.intent,
-            severity: data.severity,
+            intent: input.intent,
+            severity: input.severity,
             status: AnnotationStatus::Pending,
-            framework: data.framework,
+            framework: input.framework,
             thread: Vec::new(),
             resolved_by: None,
             resolved_at: None,
@@ -169,7 +169,7 @@ impl Store {
     }
 
     /// Update an annotation's mutable fields (status, comment, resolved_by, resolved_at, thread).
-    pub fn update_annotation(&self, id: &str, data: UpdateAnnotation) -> Result<Annotation> {
+    pub fn update_annotation(&self, id: &str, input: UpdateAnnotation) -> Result<Annotation> {
         let _lock = self.lock_exclusive()?;
         let mut annotations = self.read_all_locked()?;
         let now = chrono::Utc::now().to_rfc3339();
@@ -179,10 +179,10 @@ impl Store {
             .find(|a| a.id == id)
             .ok_or_else(|| Error::NotFound(id.to_string()))?;
 
-        if let Some(comment) = data.comment {
+        if let Some(comment) = input.comment {
             annotation.comment = comment;
         }
-        if let Some(status) = data.status {
+        if let Some(status) = input.status {
             annotation.status = status;
 
             // Clean up screenshot when resolving or dismissing
@@ -191,13 +191,13 @@ impl Store {
                 annotation.screenshot = None;
             }
         }
-        if let Some(resolved_by) = data.resolved_by {
+        if let Some(resolved_by) = input.resolved_by {
             annotation.resolved_by = Some(resolved_by);
         }
-        if let Some(resolved_at) = data.resolved_at {
+        if let Some(resolved_at) = input.resolved_at {
             annotation.resolved_at = Some(resolved_at);
         }
-        if let Some(thread) = data.thread {
+        if let Some(thread) = input.thread {
             annotation.thread = thread;
         }
 
