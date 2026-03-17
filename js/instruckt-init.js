@@ -97,15 +97,6 @@
 
   // --- Auto-initialize instruckt ---
 
-  // Detect frontend frameworks by checking for known globals and DOM markers
-  function detectAdapters() {
-    const adapters = [];
-    if (typeof React !== "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined") adapters.push("react");
-    if (typeof Vue !== "undefined" || document.querySelector("[data-v-app]")) adapters.push("vue");
-    if (typeof __SVELTE_HMR !== "undefined" || document.querySelector("[class*='svelte-']")) adapters.push("svelte");
-    return adapters;
-  }
-
   let retryCount = 0;
   const MAX_RETRIES = 50;
 
@@ -125,7 +116,6 @@
       endpoint: "/instruckt",
       theme: "auto",
       position: "bottom-right",
-      adapters: detectAdapters(),
       mcp: true,
     });
 
