@@ -71,10 +71,10 @@ impl Store {
         Ok(lock_file)
     }
 
-    /// Read all annotations from the JSON file (with shared lock).
-    pub fn read_all(&self) -> Result<Vec<Annotation>> {
-        let _lock = self.lock_shared()?;
-
+    /// Parse the annotations JSON file, returning an empty vec if the file
+    /// does not exist or is empty. Caller is responsible for holding the
+    /// appropriate lock.
+    fn parse_annotations_file(&self) -> Result<Vec<Annotation>> {
         let path = self.annotations_path();
         if !path.exists() {
             return Ok(Vec::new());
@@ -87,19 +87,16 @@ impl Store {
         Ok(annotations)
     }
 
+    /// Read all annotations from the JSON file (with shared lock).
+    pub fn read_all(&self) -> Result<Vec<Annotation>> {
+        let _lock = self.lock_shared()?;
+        self.parse_annotations_file()
+    }
+
     /// Read all annotations with an exclusive lock already held.
     /// Used internally by write operations that need read-then-write atomicity.
     fn read_all_locked(&self) -> Result<Vec<Annotation>> {
-        let path = self.annotations_path();
-        if !path.exists() {
-            return Ok(Vec::new());
-        }
-        let contents = std::fs::read_to_string(&path)?;
-        if contents.trim().is_empty() {
-            return Ok(Vec::new());
-        }
-        let annotations: Vec<Annotation> = serde_json::from_str(&contents)?;
-        Ok(annotations)
+        self.parse_annotations_file()
     }
 
     /// Atomically write all annotations to disk.

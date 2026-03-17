@@ -9,10 +9,12 @@ use tokio::sync::Mutex;
 
 use crate::store::Store;
 
-use super::tools::*;
+use super::tools::{AnnotationIdParam, GetProjectStructureParams};
 
 /// MCP server that exposes instruckt annotation tools over stdio.
 #[derive(Clone)]
+// Fields are read by macro-generated code from `#[tool_router]` / `ServerHandler`,
+// so rustc's dead-code analysis cannot see the usage.
 #[allow(dead_code)]
 pub struct InstrucktMcpServer {
     store: Arc<Mutex<Store>>,
@@ -49,27 +51,15 @@ impl InstrucktMcpServer {
         let annotations: Vec<serde_json::Value> = pending
             .iter()
             .map(|a| {
-                json!({
-                    "id": a.id,
-                    "url": a.url,
-                    "x": a.x,
-                    "y": a.y,
-                    "comment": a.comment,
-                    "element": a.element,
-                    "element_path": a.element_path,
-                    "css_classes": a.css_classes,
-                    "nearby_text": a.nearby_text,
-                    "selected_text": a.selected_text,
-                    "bounding_box": a.bounding_box,
-                    "has_screenshot": a.screenshot.is_some(),
-                    "intent": a.intent,
-                    "severity": a.severity,
-                    "status": a.status,
-                    "framework": a.framework,
-                    "thread": a.thread,
-                    "created_at": a.created_at,
-                    "updated_at": a.updated_at,
-                })
+                let mut val = serde_json::to_value(a).unwrap_or_default();
+                if let Some(obj) = val.as_object_mut() {
+                    let has_screenshot = obj
+                        .remove("screenshot")
+                        .map(|v| !v.is_null())
+                        .unwrap_or(false);
+                    obj.insert("has_screenshot".to_string(), json!(has_screenshot));
+                }
+                val
             })
             .collect();
 
@@ -87,7 +77,7 @@ impl InstrucktMcpServer {
     #[tool(description = "Get the screenshot image for a specific annotation. Returns the base64-encoded PNG or SVG image.")]
     async fn get_screenshot(
         &self,
-        Parameters(params): Parameters<GetScreenshotParams>,
+        Parameters(params): Parameters<AnnotationIdParam>,
     ) -> Result<CallToolResult, McpError> {
         let store = self.store.lock().await;
         let screenshot = store
@@ -105,7 +95,7 @@ impl InstrucktMcpServer {
     #[tool(description = "Mark an annotation as resolved. Sets status to 'resolved', resolved_by to 'agent', and cleans up the screenshot file.")]
     async fn resolve(
         &self,
-        Parameters(params): Parameters<ResolveParams>,
+        Parameters(params): Parameters<AnnotationIdParam>,
     ) -> Result<CallToolResult, McpError> {
         let store = self.store.lock().await;
         let now = chrono::Utc::now().to_rfc3339();
@@ -137,7 +127,7 @@ impl InstrucktMcpServer {
     #[tool(description = "Get the source file path and line number for an annotation. Extracts from the annotation's framework context (source_file, source_line).")]
     async fn get_source_location(
         &self,
-        Parameters(params): Parameters<GetSourceLocationParams>,
+        Parameters(params): Parameters<AnnotationIdParam>,
     ) -> Result<CallToolResult, McpError> {
         let store = self.store.lock().await;
         let annotation = store
@@ -176,7 +166,7 @@ impl InstrucktMcpServer {
     #[tool(description = "Get the component hierarchy for an annotation. Returns the component stack from the framework context and element_path.")]
     async fn get_component_stack(
         &self,
-        Parameters(params): Parameters<GetComponentStackParams>,
+        Parameters(params): Parameters<AnnotationIdParam>,
     ) -> Result<CallToolResult, McpError> {
         let store = self.store.lock().await;
         let annotation = store

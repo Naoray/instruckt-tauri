@@ -1,5 +1,5 @@
 use base64::Engine;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::error::{Error, Result};
 
@@ -49,11 +49,6 @@ pub fn read_screenshot(data_dir: &Path, relative_path: &str) -> Result<Screensho
     let mime_type = extension_to_mime(ext).to_string();
     let base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
     Ok(ScreenshotData { base64, mime_type })
-}
-
-/// Get the absolute path for a screenshot.
-pub fn screenshot_abs_path(data_dir: &Path, relative_path: &str) -> PathBuf {
-    data_dir.join(relative_path)
 }
 
 fn parse_data_url(data_url: &str) -> Result<(String, &str)> {
