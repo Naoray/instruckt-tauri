@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::store::Store;
 use crate::types::{Annotation, CreateAnnotation, UpdateAnnotation};
 
+/// Thread-safe wrapper around the annotation store for Tauri managed state.
 #[derive(Clone)]
 pub struct InstrucktState {
     store: Arc<Mutex<Store>>,

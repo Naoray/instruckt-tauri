@@ -37,6 +37,7 @@ pub struct ThreadMessage {
 /// Default value for `resolved_by` when an AI agent resolves an annotation.
 pub const RESOLVED_BY_AGENT: &str = "agent";
 
+/// Represents the bounding rectangle of an annotated UI element.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BoundingBox {
     pub x: f64,
@@ -45,6 +46,7 @@ pub struct BoundingBox {
     pub height: f64,
 }
 
+/// A UI annotation capturing user feedback on a specific element.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Annotation {
     pub id: String,
@@ -79,7 +81,7 @@ pub struct Annotation {
     pub updated_at: String,
 }
 
-/// Data sent from the JS frontend when creating an annotation.
+/// Data required to create a new annotation.
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateAnnotation {
     pub url: String,
@@ -104,7 +106,7 @@ pub struct CreateAnnotation {
     pub framework: Option<serde_json::Value>,
 }
 
-/// Subset of fields that can be updated after creation.
+/// Optional fields for updating an existing annotation.
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct UpdateAnnotation {
     #[serde(default)]

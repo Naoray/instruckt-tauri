@@ -47,10 +47,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::update_annotation,
         ])
         .setup(|app, _api| {
-            let data_dir = Store::default_data_dir()
-                .map_err(|e| e.to_string())?;
-            let store = Store::new(data_dir)
-                .map_err(|e| e.to_string())?;
+            let data_dir = Store::default_data_dir().map_err(|e| e.to_string())?;
+            let store = Store::new(data_dir).map_err(|e| e.to_string())?;
             app.manage(InstrucktState::new(store));
 
             #[cfg(debug_assertions)]
