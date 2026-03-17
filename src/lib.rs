@@ -1,5 +1,6 @@
 mod commands;
 pub mod error;
+pub mod project;
 pub mod screenshot;
 pub mod state;
 pub mod store;
