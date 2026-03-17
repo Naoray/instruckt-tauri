@@ -121,8 +121,8 @@ impl InstrucktMcpServer {
         let now = chrono::Utc::now().to_rfc3339();
         let data = crate::types::UpdateAnnotation {
             comment: None,
-            status: Some("resolved".to_string()),
-            resolved_by: Some("agent".to_string()),
+            status: Some(crate::types::AnnotationStatus::Resolved),
+            resolved_by: Some(crate::types::RESOLVED_BY_AGENT.to_string()),
             resolved_at: Some(now),
             thread: None,
         };

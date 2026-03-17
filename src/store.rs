@@ -5,7 +5,7 @@ use fs2::FileExt;
 
 use crate::error::{Error, Result};
 use crate::screenshot;
-use crate::types::{Annotation, CreateAnnotation, UpdateAnnotation};
+use crate::types::{Annotation, AnnotationStatus, CreateAnnotation, UpdateAnnotation};
 
 /// JSON file-based annotation store.
 ///
@@ -150,7 +150,7 @@ impl Store {
             screenshot: screenshot_path,
             intent: data.intent,
             severity: data.severity,
-            status: "pending".to_string(),
+            status: AnnotationStatus::Pending,
             framework: data.framework,
             thread: Vec::new(),
             resolved_by: None,
@@ -185,11 +185,11 @@ impl Store {
         if let Some(comment) = data.comment {
             annotation.comment = comment;
         }
-        if let Some(status) = &data.status {
-            annotation.status = status.clone();
+        if let Some(status) = data.status {
+            annotation.status = status;
 
             // Clean up screenshot when resolving or dismissing
-            if status == "resolved" || status == "dismissed" {
+            if annotation.status.is_closed() {
                 screenshot::delete_screenshot(&self.data_dir, annotation.screenshot.as_deref());
                 annotation.screenshot = None;
             }
@@ -211,12 +211,12 @@ impl Store {
         Ok(updated)
     }
 
-    /// Get all annotations with status == "pending".
+    /// Get all annotations with status `Pending`.
     pub fn get_pending(&self) -> Result<Vec<Annotation>> {
         let annotations = self.read_all()?;
         Ok(annotations
             .into_iter()
-            .filter(|a| a.status == "pending")
+            .filter(|a| a.status == AnnotationStatus::Pending)
             .collect())
     }
 
@@ -239,7 +239,7 @@ impl Store {
 mod tests {
     use super::*;
     use base64::Engine;
-    use crate::types::{CreateAnnotation, UpdateAnnotation};
+    use crate::types::{AnnotationStatus, CreateAnnotation, ThreadMessage, UpdateAnnotation};
     use tempfile::TempDir;
 
     fn make_store() -> (TempDir, Store) {
@@ -281,7 +281,7 @@ mod tests {
 
         let annotation = store.create_annotation(data).unwrap();
         assert!(!annotation.id.is_empty());
-        assert_eq!(annotation.status, "pending");
+        assert_eq!(annotation.status, AnnotationStatus::Pending);
         assert_eq!(annotation.comment, "Fix this button");
         assert_eq!(annotation.intent, "fix");
         assert_eq!(annotation.severity, "important");
@@ -353,7 +353,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(updated.comment, "Updated comment");
-        assert_eq!(updated.status, "pending"); // unchanged
+        assert_eq!(updated.status, AnnotationStatus::Pending); // unchanged
         assert_ne!(updated.updated_at, created.updated_at);
     }
 
@@ -367,7 +367,7 @@ mod tests {
                 &created.id,
                 UpdateAnnotation {
                     comment: None,
-                    status: Some("resolved".into()),
+                    status: Some(AnnotationStatus::Resolved),
                     resolved_by: Some("agent".into()),
                     resolved_at: Some("2026-03-16T00:00:00Z".into()),
                     thread: None,
@@ -375,7 +375,7 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(updated.status, "resolved");
+        assert_eq!(updated.status, AnnotationStatus::Resolved);
         assert_eq!(updated.resolved_by.as_deref(), Some("agent"));
         assert_eq!(updated.resolved_at.as_deref(), Some("2026-03-16T00:00:00Z"));
     }
@@ -409,7 +409,7 @@ mod tests {
                 &a1.id,
                 UpdateAnnotation {
                     comment: None,
-                    status: Some("resolved".into()),
+                    status: Some(AnnotationStatus::Resolved),
                     resolved_by: Some("human".into()),
                     resolved_at: None,
                     thread: None,
@@ -419,7 +419,7 @@ mod tests {
 
         let pending = store.get_pending().unwrap();
         assert_eq!(pending.len(), 1);
-        assert_eq!(pending[0].status, "pending");
+        assert_eq!(pending[0].status, AnnotationStatus::Pending);
     }
 
     #[test]
@@ -428,8 +428,8 @@ mod tests {
         let created = store.create_annotation(sample_create_data()).unwrap();
 
         let thread = vec![
-            serde_json::json!({"role": "user", "text": "This needs fixing"}),
-            serde_json::json!({"role": "agent", "text": "I'll take a look"}),
+            ThreadMessage { role: "user".into(), text: "This needs fixing".into() },
+            ThreadMessage { role: "agent".into(), text: "I'll take a look".into() },
         ];
 
         let updated = store
@@ -497,7 +497,7 @@ mod tests {
                 &annotation.id,
                 UpdateAnnotation {
                     comment: None,
-                    status: Some("resolved".into()),
+                    status: Some(AnnotationStatus::Resolved),
                     resolved_by: Some("agent".into()),
                     resolved_at: None,
                     thread: None,
