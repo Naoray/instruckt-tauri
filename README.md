@@ -100,7 +100,9 @@ Add to `.mcp.json` in your project root:
 |------|-------------|
 | `get_all_pending` | List all unresolved annotations with metadata |
 | `get_screenshot` | Get the screenshot image for an annotation |
-| `resolve` | Mark an annotation as resolved |
+| `resolve` | Mark an annotation as resolved (cleans up screenshot) |
+| `dismiss` | Dismiss an annotation that doesn't need fixing (cleans up screenshot) |
+| `delete_annotation` | Permanently delete an annotation and its screenshot |
 | `get_source_location` | Get source file path and line number |
 | `get_component_stack` | Get the React/Vue/Svelte component hierarchy |
 | `get_project_structure` | Get a filtered directory tree of frontend source files |
@@ -112,7 +114,7 @@ The plugin injects two scripts into every webview (debug builds only):
 1. **instruckt IIFE** — the annotation UI (toolbar, highlight overlay, popup forms, markers)
 2. **IPC shim** — patches `fetch()` to route instruckt API calls through Tauri IPC instead of HTTP
 
-The JS library thinks it's talking to an HTTP API (`/instruckt/annotations`), but the shim intercepts those calls and routes them to Rust via `__TAURI_INTERNALS__.invoke`. The same instruckt JS works in both web and desktop without changes.
+The JS library thinks it's talking to an HTTP API (`/instruckt/annotations`), but the shim intercepts those calls and routes them to Rust via `__TAURI_INTERNALS__.invoke`. The shim handles `GET`, `POST`, `PATCH`, and `DELETE` routes. The same instruckt JS works in both web and desktop without changes.
 
 Annotations and screenshots are stored as JSON files in the OS app data directory (`~/.local/share` on Linux, `~/Library/Application Support` on macOS, `AppData` on Windows). The MCP server reads from the same directory, so AI agents see the same annotations.
 
@@ -123,7 +125,7 @@ Annotations and screenshots are stored as JSON files in the OS app data director
 3. Type your feedback and save
 4. The annotation auto-copies as structured markdown to your clipboard
 5. Paste into your AI agent (Claude Code, Cursor, Copilot, etc.)
-6. The agent uses MCP tools to view screenshots, read source context, and resolve annotations
+6. The agent uses MCP tools to view screenshots, read source context, and resolve/dismiss/delete annotations
 
 ## Keyboard shortcuts
 
