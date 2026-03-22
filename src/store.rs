@@ -183,13 +183,16 @@ impl Store {
         if let Some(comment) = input.comment {
             annotation.comment = comment;
         }
+
+        // Track screenshot path for deferred cleanup after successful write
+        let mut screenshot_to_delete = None;
+
         if let Some(status) = input.status {
             annotation.status = status;
 
-            // Clean up screenshot when resolving or dismissing
+            // Mark screenshot for cleanup when resolving or dismissing
             if annotation.status.is_closed() {
-                screenshot::delete_screenshot(&self.data_dir, annotation.screenshot.as_deref());
-                annotation.screenshot = None;
+                screenshot_to_delete = annotation.screenshot.take();
             }
         }
         if let Some(resolved_by) = input.resolved_by {
@@ -206,6 +209,10 @@ impl Store {
         let updated = annotation.clone();
 
         self.write_all_locked(&annotations)?;
+
+        // Only delete screenshot after successful write to avoid data loss
+        screenshot::delete_screenshot(&self.data_dir, screenshot_to_delete.as_deref());
+
         Ok(updated)
     }
 
@@ -219,11 +226,14 @@ impl Store {
             .position(|a| a.id == id)
             .ok_or_else(|| Error::NotFound(id.to_string()))?;
 
-        let annotation = &annotations[idx];
-        screenshot::delete_screenshot(&self.data_dir, annotation.screenshot.as_deref());
+        // Capture screenshot path before removing the annotation
+        let screenshot_path = annotations[idx].screenshot.clone();
 
         annotations.remove(idx);
         self.write_all_locked(&annotations)?;
+
+        // Only delete screenshot after successful write to avoid data loss
+        screenshot::delete_screenshot(&self.data_dir, screenshot_path.as_deref());
 
         Ok(())
     }
