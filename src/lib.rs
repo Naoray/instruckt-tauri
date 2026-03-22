@@ -45,6 +45,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::get_annotations,
             commands::create_annotation,
             commands::update_annotation,
+            commands::delete_annotation,
         ])
         .setup(|app, _api| {
             let data_dir = Store::default_data_dir().map_err(|e| e.to_string())?;

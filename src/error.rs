@@ -15,9 +15,6 @@ pub enum Error {
     #[error("Annotation not found: {0}")]
     NotFound(String),
 
-    #[error("Mutex poisoned: {0}")]
-    MutexPoisoned(String),
-
     #[error("Validation error: {0}")]
     Validation(String),
 
@@ -31,18 +28,6 @@ impl Serialize for Error {
         serializer: S,
     ) -> std::result::Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
-    }
-}
-
-impl<T> From<std::sync::PoisonError<T>> for Error {
-    fn from(e: std::sync::PoisonError<T>) -> Self {
-        Error::MutexPoisoned(e.to_string())
-    }
-}
-
-impl From<tokio::task::JoinError> for Error {
-    fn from(e: tokio::task::JoinError) -> Self {
-        Error::Other(e.to_string())
     }
 }
 

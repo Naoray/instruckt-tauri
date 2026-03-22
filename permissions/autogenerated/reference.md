@@ -7,6 +7,7 @@ Default permissions for the instruckt plugin
 - `allow-get-annotations`
 - `allow-create-annotation`
 - `allow-update-annotation`
+- `allow-delete-annotation`
 
 ## Permission Table
 
@@ -39,6 +40,32 @@ Enables the create_annotation command without any pre-configured scope.
 <td>
 
 Denies the create_annotation command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`instruckt:allow-delete-annotation`
+
+</td>
+<td>
+
+Enables the delete_annotation command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`instruckt:deny-delete-annotation`
+
+</td>
+<td>
+
+Denies the delete_annotation command without any pre-configured scope.
 
 </td>
 </tr>

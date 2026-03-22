@@ -112,6 +112,7 @@ impl Store {
         let mut file = std::fs::File::create(&tmp_path)?;
         file.write_all(json.as_bytes())?;
         file.flush()?;
+        file.sync_all()?;
 
         std::fs::rename(&tmp_path, &path)?;
         Ok(())
@@ -182,13 +183,16 @@ impl Store {
         if let Some(comment) = input.comment {
             annotation.comment = comment;
         }
+
+        // Track screenshot path for deferred cleanup after successful write
+        let mut screenshot_to_delete = None;
+
         if let Some(status) = input.status {
             annotation.status = status;
 
-            // Clean up screenshot when resolving or dismissing
+            // Mark screenshot for cleanup when resolving or dismissing
             if annotation.status.is_closed() {
-                screenshot::delete_screenshot(&self.data_dir, annotation.screenshot.as_deref());
-                annotation.screenshot = None;
+                screenshot_to_delete = annotation.screenshot.take();
             }
         }
         if let Some(resolved_by) = input.resolved_by {
@@ -205,7 +209,33 @@ impl Store {
         let updated = annotation.clone();
 
         self.write_all_locked(&annotations)?;
+
+        // Only delete screenshot after successful write to avoid data loss
+        screenshot::delete_screenshot(&self.data_dir, screenshot_to_delete.as_deref());
+
         Ok(updated)
+    }
+
+    /// Delete an annotation by ID. Also removes its screenshot if present.
+    pub fn delete_annotation(&self, id: &str) -> Result<()> {
+        let _lock = self.lock_exclusive()?;
+        let mut annotations = self.read_all_locked()?;
+
+        let idx = annotations
+            .iter()
+            .position(|a| a.id == id)
+            .ok_or_else(|| Error::NotFound(id.to_string()))?;
+
+        // Capture screenshot path before removing the annotation
+        let screenshot_path = annotations[idx].screenshot.clone();
+
+        annotations.remove(idx);
+        self.write_all_locked(&annotations)?;
+
+        // Only delete screenshot after successful write to avoid data loss
+        screenshot::delete_screenshot(&self.data_dir, screenshot_path.as_deref());
+
+        Ok(())
     }
 
     /// Get all annotations with status `Pending`.
@@ -443,6 +473,60 @@ mod tests {
             .unwrap();
 
         assert_eq!(updated.thread.len(), 2);
+    }
+
+    #[test]
+    fn test_delete_annotation() {
+        let (_dir, store) = make_store();
+        let created = store.create_annotation(sample_create_data()).unwrap();
+
+        store.delete_annotation(&created.id).unwrap();
+
+        let all = store.read_all().unwrap();
+        assert!(all.is_empty());
+    }
+
+    #[test]
+    fn test_delete_annotation_with_screenshot() {
+        let (dir, store) = make_store();
+        let b64 = base64::engine::general_purpose::STANDARD.encode(b"fake png data");
+        let data_url = format!("data:image/png;base64,{b64}");
+
+        let mut data = sample_create_data();
+        data.screenshot = Some(data_url);
+
+        let annotation = store.create_annotation(data).unwrap();
+        let screenshot_rel = annotation.screenshot.as_ref().unwrap();
+        let screenshot_abs = dir.path().join(screenshot_rel);
+        assert!(screenshot_abs.exists());
+
+        store.delete_annotation(&annotation.id).unwrap();
+
+        assert!(!screenshot_abs.exists());
+        let all = store.read_all().unwrap();
+        assert!(all.is_empty());
+    }
+
+    #[test]
+    fn test_delete_annotation_not_found() {
+        let (_dir, store) = make_store();
+        let result = store.delete_annotation("nonexistent");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_delete_preserves_other_annotations() {
+        let (_dir, store) = make_store();
+        let a1 = store.create_annotation(sample_create_data()).unwrap();
+        let a2 = store.create_annotation(sample_create_data()).unwrap();
+        let a3 = store.create_annotation(sample_create_data()).unwrap();
+
+        store.delete_annotation(&a2.id).unwrap();
+
+        let all = store.read_all().unwrap();
+        assert_eq!(all.len(), 2);
+        assert_eq!(all[0].id, a1.id);
+        assert_eq!(all[1].id, a3.id);
     }
 
     #[test]

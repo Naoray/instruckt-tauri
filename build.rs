@@ -1,4 +1,4 @@
-const COMMANDS: &[&str] = &["get_annotations", "create_annotation", "update_annotation"];
+const COMMANDS: &[&str] = &["get_annotations", "create_annotation", "update_annotation", "delete_annotation"];
 
 fn main() {
     // Re-embed JS when these files change

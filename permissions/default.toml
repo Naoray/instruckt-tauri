@@ -4,4 +4,5 @@ permissions = [
     "allow-get-annotations",
     "allow-create-annotation",
     "allow-update-annotation",
+    "allow-delete-annotation",
 ]

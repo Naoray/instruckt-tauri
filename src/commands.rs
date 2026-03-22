@@ -6,9 +6,7 @@ use crate::types::{Annotation, CreateAnnotation, UpdateAnnotation};
 
 #[command]
 pub async fn get_annotations(state: State<'_, InstrucktState>) -> Result<Vec<Annotation>> {
-    let state = state.inner().clone();
-    tokio::task::spawn_blocking(move || state.read_all())
-        .await?
+    state.read_all().await
 }
 
 #[command]
@@ -23,9 +21,7 @@ pub async fn create_annotation(
         return Err(Error::Validation("comment cannot be empty".into()));
     }
 
-    let state = state.inner().clone();
-    tokio::task::spawn_blocking(move || state.create_annotation(input))
-        .await?
+    state.create_annotation(input).await
 }
 
 #[command]
@@ -38,7 +34,17 @@ pub async fn update_annotation(
         return Err(Error::Validation("annotation id cannot be empty".into()));
     }
 
-    let state = state.inner().clone();
-    tokio::task::spawn_blocking(move || state.update_annotation(&id, input))
-        .await?
+    state.update_annotation(&id, input).await
+}
+
+#[command]
+pub async fn delete_annotation(
+    state: State<'_, InstrucktState>,
+    id: String,
+) -> Result<()> {
+    if id.trim().is_empty() {
+        return Err(Error::Validation("annotation id cannot be empty".into()));
+    }
+
+    state.delete_annotation(&id).await
 }
