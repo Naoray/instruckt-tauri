@@ -17,7 +17,7 @@ Users annotate elements in the webview, annotations are copied as structured mar
 ```toml
 # src-tauri/Cargo.toml
 [dependencies]
-tauri-plugin-instruckt = { git = "https://github.com/Naoray/instruckt-tauri.git", tag = "v0.1.0" }
+tauri-plugin-instruckt = { git = "https://github.com/Naoray/instruckt-tauri.git", tag = "v0.2.0" }
 ```
 
 ## Setup
@@ -75,7 +75,7 @@ The plugin includes a standalone MCP server binary that AI agents connect to via
 ### Install
 
 ```sh
-cargo install --git https://github.com/Naoray/instruckt-tauri.git --tag v0.1.0 --bin instruckt-mcp
+cargo install --git https://github.com/Naoray/instruckt-tauri.git --tag v0.2.0 --bin instruckt-mcp
 ```
 
 ### Configure your agent

@@ -343,10 +343,10 @@
           "markdownDescription": "Denies the update_annotation command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the instruckt plugin\n#### This default permission set includes:\n\n- `allow-get-annotations`\n- `allow-create-annotation`\n- `allow-update-annotation`",
+          "description": "Default permissions for the instruckt plugin\n#### This default permission set includes:\n\n- `allow-get-annotations`\n- `allow-create-annotation`\n- `allow-update-annotation`\n- `allow-delete-annotation`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the instruckt plugin\n#### This default permission set includes:\n\n- `allow-get-annotations`\n- `allow-create-annotation`\n- `allow-update-annotation`"
+          "markdownDescription": "Default permissions for the instruckt plugin\n#### This default permission set includes:\n\n- `allow-get-annotations`\n- `allow-create-annotation`\n- `allow-update-annotation`\n- `allow-delete-annotation`"
         }
       ]
     }

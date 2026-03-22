@@ -7,6 +7,7 @@ Default permissions for the instruckt plugin
 - `allow-get-annotations`
 - `allow-create-annotation`
 - `allow-update-annotation`
+- `allow-delete-annotation`
 
 ## Permission Table
 
